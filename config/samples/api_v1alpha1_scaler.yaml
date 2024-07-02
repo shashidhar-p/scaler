@@ -9,9 +9,9 @@ metadata:
     app.kubernetes.io/created-by: scaler
   name: scaler-sample
 spec:
-  start: 15
-  end: 25
-  replicas: 1
+  start: 19
+  end: 21
+  replicas: 4
   deployments:
-    - name: nginx
-      namespace: {{ .TENANT_NAMESPACE }}
+    - name: nginx-deployment
+      namespace: default

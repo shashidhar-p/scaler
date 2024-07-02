@@ -56,7 +56,7 @@ type ScalerReconciler struct {
 func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logger.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
 	log.Info("Executing Reconcile Function")
-	data := render.MakeRenderData()
+	// data := render.MakeRenderData()
 	scaler := &apiv1alpha1.Scaler{}
 
 	err := r.Get(ctx, req.NamespacedName, scaler)
@@ -90,6 +90,33 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 					return ctrl.Result{}, nil
 				}
 
+			}
+		}
+	} else {
+		// Outside the specified time window, set replicas to 1
+		for _, deploy := range scaler.Spec.Deployments {
+			deployment := &v1.Deployment{}
+
+			// Fetch the Deployment object
+			err := r.Get(ctx, types.NamespacedName{
+				Namespace: deploy.Namespace,
+				Name:      deploy.Name,
+			}, deployment)
+
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+
+			// Set replicas to 1
+			oneReplica := int32(1)
+			if *deployment.Spec.Replicas != oneReplica {
+				deployment.Spec.Replicas = &oneReplica
+
+				// Update the Deployment
+				err := r.Update(ctx, deployment)
+				if err != nil {
+					return ctrl.Result{}, err
+				}
 			}
 		}
 	}
